@@ -1,0 +1,37 @@
+{
+    "name": "Xenia-2",
+    "sensors": [
+        {
+            "name": "LSM",
+            "id": 1,
+            "values": [
+                {
+                    "name": "x",
+                    "data_type": "float_32"
+                },
+                {
+                    "name": "y",
+                    "data_type": "float_32"
+                },
+                {
+                    "name": "z",
+                    "data_type": "float_32"
+                }
+            ]
+        },
+        {
+            "name": "BMP",
+            "id": 2,
+            "values": [
+                {
+                    "name": "pressure",
+                    "data_type": "float_32"
+                },
+                {
+                    "name": "temperature",
+                    "data_type": "float_32"
+                }
+            ]
+        }
+    ]
+}

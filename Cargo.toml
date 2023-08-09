@@ -1,0 +1,21 @@
+[package]
+name = "flight_data_reader"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde_json = "1.0.104"
+
+[dependencies.serde]
+version = "1.0.183"
+features = ["derive"]
+
+[dependencies.clap]
+version = "4.3.21"
+features = ["derive"]
+# TODO: Find a good way to only build this in the binary and not the library.
+#       There is an RFC to allow this, but also this is low-priority at the
+#       moment because the binary is the only thing that actually uses the
+#       library.
