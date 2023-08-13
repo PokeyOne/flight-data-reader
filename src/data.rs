@@ -20,6 +20,23 @@ pub union Value {
     pub float_64: f64
 }
 
+impl Value {
+    pub unsafe fn to_string(&self, value_kind: &ValueKind) -> String {
+        match value_kind {
+            ValueKind::Int8 => self.int_8.to_string(),
+            ValueKind::Int16 => self.int_16.to_string(),
+            ValueKind::Int32 => self.int_32.to_string(),
+            ValueKind::Int64 => self.int_64.to_string(),
+            ValueKind::UInt8 => self.uint_8.to_string(),
+            ValueKind::UInt16 => self.uint_16.to_string(),
+            ValueKind::UInt32 => self.uint_32.to_string(),
+            ValueKind::UInt64 => self.uint_64.to_string(),
+            ValueKind::Float32 => format!("{:.8}", self.float_32),
+            ValueKind::Float64 => self.float_64.to_string()
+        }
+    }
+}
+
 pub struct Packet {
     pub id: u8,
     pub values: Vec<Value>
@@ -112,14 +129,17 @@ impl<R: Read> PacketParser<R> {
 #[derive(Debug)]
 pub enum PacketError {
     InvalidId(u8),
-    EndOfStream
+    InvalidValueCount {
+        actual: usize,
+        expected: usize
+    }
 }
 
 impl std::fmt::Display for PacketError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             PacketError::InvalidId(id) => write!(f, "Invalid packet id: {}", id),
-            PacketError::EndOfStream => write!(f, "End of stream")
+            PacketError::InvalidValueCount { actual, expected } => write!(f, "Invalid value count: expected {}, got {}", expected, actual)
         }
     }
 }
@@ -133,7 +153,7 @@ impl<R: Read> Iterator for PacketParser<R> {
         let mut id = [0u8; 1];
 
         if self.reader.read_exact(&mut id).is_err() {
-            return Some(Err(PacketError::EndOfStream));
+            return None;
         }
 
         let id = id[0];

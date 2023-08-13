@@ -32,6 +32,16 @@
                     "data_type": "float_32"
                 }
             ]
+        },
+        {
+            "name": "integer_test",
+            "id": 3,
+            "values": [
+                {
+                    "name": "int",
+                    "data_type": "int_32"
+                }
+            ]
         }
     ]
 }

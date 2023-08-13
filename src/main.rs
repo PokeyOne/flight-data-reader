@@ -1,26 +1,51 @@
+use std::fs::File;
+use std::io::{BufWriter, Write};
 use std::path::{PathBuf, Path};
 
 use clap::{Parser, Subcommand};
 use flight_data_reader::configuration::RocketConfig;
+use flight_data_reader::csv::CsvGenerator;
+use flight_data_reader::data::PacketParser;
 
 #[derive(Parser)]
 struct Cli {
     #[clap(subcommand)]
     action: Action,
-    /// The location of the config file.
-    #[clap(short, long)]
-    config: PathBuf
 }
 
 #[derive(Subcommand)]
 enum Action {
-    Check
+    Check {
+        /// The location of the config file.
+        #[clap(short, long)]
+        config: PathBuf
+    },
+    Convert {
+        #[clap(short, long, default_value = "csv")]
+        to: String,
+        /// The location of the config file.
+        #[clap(short, long)]
+        config: PathBuf,
+        /// The encoded file from the flight computer.
+        data: PathBuf,
+        /// The location to write the decoded data to.
+        output: PathBuf
+    }
+}
+
+impl Action {
+    pub fn config(&self) -> &Path {
+        match self {
+            Action::Check { config } => config,
+            Action::Convert { config, .. } => config
+        }
+    }
 }
 
 fn main() {
     let args = Cli::parse();
 
-    let config = match load_config(&args.config) {
+    let config = match load_config(args.action.config()) {
         Ok(config) => config,
         Err(e) => {
             eprintln!("Could not load config: {e}");
@@ -29,7 +54,29 @@ fn main() {
     };
 
     match args.action {
-        Action::Check => check_config(config)
+        Action::Check { .. } => check_config(config),
+        Action::Convert { to, data, output, .. } => convert_data(config, to, data, output)
+    }
+}
+
+fn convert_data(config: RocketConfig, to: String, data: PathBuf, output: PathBuf) {
+    let input_reader = File::open(data).unwrap();
+    let packet_parser = PacketParser::new(input_reader, config.clone());
+    let mut csv_gen = CsvGenerator::new(packet_parser, config.clone());
+
+    let mut output_writer = BufWriter::new(File::create(output).unwrap());
+
+    while let Some(line) = csv_gen.next() {
+        let line = match line {
+            Ok(line) => line,
+            Err(e) => {
+                eprintln!("Error while parsing packet: {e}");
+                continue;
+            }
+        };
+
+        output_writer.write_all(line.as_bytes()).unwrap();
+        output_writer.write_all(b"\n").unwrap();
     }
 }
 
