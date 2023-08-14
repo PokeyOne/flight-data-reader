@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[cfg(test)]
 mod tests;
@@ -27,7 +27,7 @@ pub enum ValueKind {
     #[serde(rename = "float_32")]
     Float32,
     #[serde(rename = "float_64")]
-    Float64
+    Float64,
 }
 
 impl ToString for ValueKind {
@@ -43,7 +43,8 @@ impl ToString for ValueKind {
             ValueKind::UInt64 => "uint_64",
             ValueKind::Float32 => "float_32",
             ValueKind::Float64 => "float_64",
-        }.to_string()
+        }
+        .to_string()
     }
 }
 
@@ -56,7 +57,7 @@ pub struct ValueConfig {
     ///
     /// This is important as different kinds of value may have a different
     /// number of bytes.
-    pub data_type: ValueKind
+    pub data_type: ValueKind,
 }
 
 /// Configuration for data from a sensor.
@@ -70,7 +71,7 @@ pub struct SensorConfig {
     /// The ID of this sensor in the rocket config.
     pub id: u8,
     /// The values that this sensor reads.
-    pub values: Vec<ValueConfig>
+    pub values: Vec<ValueConfig>,
 }
 
 /// Configuration for a single rocket.
@@ -79,7 +80,7 @@ pub struct RocketConfig {
     /// The name of the rocket that is launching
     pub name: String,
     /// The sensors that are on the rocket
-    pub sensors: Vec<SensorConfig>
+    pub sensors: Vec<SensorConfig>,
 }
 
 impl RocketConfig {
@@ -88,7 +89,7 @@ impl RocketConfig {
 
         for sensor in self.sensors.iter() {
             if ids.contains(&sensor.id) {
-                return Err(format!("Multiple sensors with ID: {}", sensor.id))
+                return Err(format!("Multiple sensors with ID: {}", sensor.id));
             } else {
                 ids.insert(sensor.id);
             }
@@ -99,12 +100,6 @@ impl RocketConfig {
 
     pub fn get_sensor_by_id(&self, id: u8) -> Option<&SensorConfig> {
         // TODO: A way to keep this sorted would be handy.
-        for sensor in self.sensors.iter() {
-            if sensor.id == id {
-                return Some(sensor)
-            }
-        }
-
-        None
+        self.sensors.iter().find(|&sensor| sensor.id == id)
     }
 }

@@ -1,9 +1,9 @@
 use std::collections::HashMap;
-use std::io::{Write, BufWriter};
+use std::io::{BufWriter, Write};
 
 use std::fmt::Write as FmtWrite;
 
-use crate::configuration::{RocketConfig, ValueKind, SensorConfig, ValueConfig};
+use crate::configuration::{RocketConfig, SensorConfig, ValueConfig};
 use crate::data::{Packet, PacketError};
 
 pub trait SourceIterator: Iterator<Item = Result<Packet, PacketError>> {}
@@ -14,7 +14,7 @@ pub struct CsvGenerator<I: SourceIterator> {
     is_first: bool,
     config: RocketConfig,
     packet_buf: Vec<Packet>,
-    columns: Vec<String>
+    columns: Vec<String>,
 }
 
 impl<I: SourceIterator> CsvGenerator<I> {
@@ -22,9 +22,11 @@ impl<I: SourceIterator> CsvGenerator<I> {
         let columns = Self::columns(&config);
 
         Self {
-            iter, config, columns,
+            iter,
+            config,
+            columns,
             is_first: true,
-            packet_buf: vec![]
+            packet_buf: vec![],
         }
     }
 
@@ -37,7 +39,7 @@ impl<I: SourceIterator> CsvGenerator<I> {
 
         for sensor in config.sensors.iter() {
             for value in sensor.values.iter() {
-                result.push(Self::column_name(&sensor, &value));
+                result.push(Self::column_name(sensor, value));
             }
         }
 
@@ -52,7 +54,7 @@ impl<I: SourceIterator> CsvGenerator<I> {
         }
     }
 
-    pub fn write_csv<W: Write>(&mut self, writer: BufWriter<W>) {
+    pub fn write_csv<W: Write>(&mut self, _writer: BufWriter<W>) {
         todo!()
     }
 }
@@ -71,7 +73,7 @@ impl<I: SourceIterator> Iterator for CsvGenerator<I> {
         'packet_loop: while let Some(packet) = self.next_packet() {
             let packet = match packet {
                 Ok(packet) => packet,
-                Err(err) => return Some(Err(err))
+                Err(err) => return Some(Err(err)),
             };
 
             let Some(sensor) = self.config.get_sensor_by_id(packet.id) else {
@@ -79,7 +81,10 @@ impl<I: SourceIterator> Iterator for CsvGenerator<I> {
             };
 
             if packet.values.len() != sensor.values.len() {
-                return Some(Err(PacketError::InvalidValueCount { expected: sensor.values.len(), actual: packet.values.len() }));
+                return Some(Err(PacketError::InvalidValueCount {
+                    expected: sensor.values.len(),
+                    actual: packet.values.len(),
+                }));
             }
 
             // If this packet has already been added to the current row, we
@@ -92,9 +97,7 @@ impl<I: SourceIterator> Iterator for CsvGenerator<I> {
             }
 
             for (spec, value) in sensor.values.iter().zip(packet.values.iter()) {
-                let value_str = unsafe {
-                    value.to_string(&spec.data_type)
-                };
+                let value_str = unsafe { value.to_string(&spec.data_type) };
 
                 current_row.insert(Self::column_name(sensor, spec), value_str);
             }
@@ -109,7 +112,7 @@ impl<I: SourceIterator> Iterator for CsvGenerator<I> {
         for column in &self.columns {
             match current_row.get(column) {
                 Some(value) => write!(result, "{},", value).unwrap(),
-                None => write!(result, ",").unwrap()
+                None => write!(result, ",").unwrap(),
             }
         }
 
@@ -120,6 +123,7 @@ impl<I: SourceIterator> Iterator for CsvGenerator<I> {
 #[cfg(test)]
 mod tests {
     use crate::data::Value;
+    use crate::configuration::ValueKind;
 
     use super::*;
 
@@ -127,37 +131,35 @@ mod tests {
     fn test_csv_generator() {
         let config = RocketConfig {
             name: "test".to_string(),
-            sensors: vec![
-                SensorConfig {
-                    id: 0,
-                    name: "test".to_string(),
-                    values: vec![
-                        ValueConfig {
-                            name: "value".to_string(),
-                            data_type: ValueKind::Float32
-                        },
-                        ValueConfig {
-                            name: "value2".to_string(),
-                            data_type: ValueKind::Int32
-                        }
-                    ]
-                }
-            ]
+            sensors: vec![SensorConfig {
+                id: 0,
+                name: "test".to_string(),
+                values: vec![
+                    ValueConfig {
+                        name: "value".to_string(),
+                        data_type: ValueKind::Float32,
+                    },
+                    ValueConfig {
+                        name: "value2".to_string(),
+                        data_type: ValueKind::Int32,
+                    },
+                ],
+            }],
         };
 
         let packets = vec![
             Packet {
                 id: 0,
-                values: vec![Value { float_32: 1.0 }, Value { int_32: 1 }]
+                values: vec![Value { float_32: 1.0 }, Value { int_32: 1 }],
             },
             Packet {
                 id: 0,
-                values: vec![Value { float_32: 2.0 }, Value { int_32: 2 }]
+                values: vec![Value { float_32: 2.0 }, Value { int_32: 2 }],
             },
             Packet {
                 id: 0,
-                values: vec![Value { float_32: 3.0 }, Value { int_32: 3 }]
-            }
+                values: vec![Value { float_32: 3.0 }, Value { int_32: 3 }],
+            },
         ];
 
         let mut csv = CsvGenerator::new(packets.into_iter().map(Ok), config);

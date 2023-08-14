@@ -7,19 +7,13 @@ fn test_packet_parser() {
     let config: RocketConfig = serde_json::from_str(raw_config).unwrap();
     let bin: Vec<u8> = vec![
         // LSM Sensor ID
-        0x01,
-        // x = 1.0
+        0x01, // x = 1.0
+        0x3f, 0x80, 0x00, 0x00, // y = 1.0
+        0x3f, 0x80, 0x00, 0x00, // z = 1.0
+        0x3f, 0x80, 0x00, 0x00, // BMP Sensor ID
+        0x02, // pressure = 1.0
+        0x3f, 0x80, 0x00, 0x00, // temperature = 1.0
         0x3f, 0x80, 0x00, 0x00,
-        // y = 1.0
-        0x3f, 0x80, 0x00, 0x00,
-        // z = 1.0
-        0x3f, 0x80, 0x00, 0x00,
-        // BMP Sensor ID
-        0x02,
-        // pressure = 1.0
-        0x3f, 0x80, 0x00, 0x00,
-        // temperature = 1.0
-        0x3f, 0x80, 0x00, 0x00
     ];
 
     let mut packet_parser = PacketParser::new(bin.as_slice(), config);

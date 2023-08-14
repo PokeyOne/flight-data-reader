@@ -1,8 +1,8 @@
 use std::fs::File;
-use std::io::{Read, BufReader};
+use std::io::{BufReader, Read};
 use std::path::Path;
 
-use crate::configuration::{ValueKind, RocketConfig, ValueConfig};
+use crate::configuration::{RocketConfig, ValueConfig, ValueKind};
 
 #[cfg(test)]
 mod tests;
@@ -17,7 +17,7 @@ pub union Value {
     pub uint_32: u32,
     pub uint_64: u64,
     pub float_32: f32,
-    pub float_64: f64
+    pub float_64: f64,
 }
 
 impl Value {
@@ -32,90 +32,93 @@ impl Value {
             ValueKind::UInt32 => self.uint_32.to_string(),
             ValueKind::UInt64 => self.uint_64.to_string(),
             ValueKind::Float32 => format!("{:.8}", self.float_32),
-            ValueKind::Float64 => self.float_64.to_string()
+            ValueKind::Float64 => self.float_64.to_string(),
         }
     }
 }
 
 pub struct Packet {
     pub id: u8,
-    pub values: Vec<Value>
+    pub values: Vec<Value>,
 }
 
 pub struct PacketParser<R: Read> {
     reader: BufReader<R>,
-    config: RocketConfig
+    config: RocketConfig,
 }
 
 impl<R: Read> PacketParser<R> {
     pub fn new(reader: R, config: RocketConfig) -> Self {
         Self {
             reader: BufReader::new(reader),
-            config
+            config,
         }
     }
 
-    pub fn from_path<P: AsRef<Path>>(path: P, config: RocketConfig) -> std::io::Result<PacketParser<File>> {
+    pub fn from_path<P: AsRef<Path>>(
+        path: P,
+        config: RocketConfig,
+    ) -> std::io::Result<PacketParser<File>> {
         let file = File::open(path)?;
         Ok(PacketParser::new(file, config))
     }
 
-    fn read_value(&mut self, value_config: &ValueConfig) -> std::io::Result<Value>  {
+    fn read_value(&mut self, value_config: &ValueConfig) -> std::io::Result<Value> {
         match value_config.data_type {
             ValueKind::Int8 => {
                 let mut value = [0u8; 1];
                 self.reader.read_exact(&mut value)?;
                 let value = i8::from_be_bytes(value);
                 Ok(Value { int_8: value })
-            },
+            }
             ValueKind::Int16 => {
                 let mut value = [0u8; 2];
                 self.reader.read_exact(&mut value)?;
                 let value = i16::from_be_bytes(value);
                 Ok(Value { int_16: value })
-            },
+            }
             ValueKind::Int32 => {
                 let mut value = [0u8; 4];
                 self.reader.read_exact(&mut value)?;
                 let value = i32::from_be_bytes(value);
                 Ok(Value { int_32: value })
-            },
+            }
             ValueKind::Int64 => {
                 let mut value = [0u8; 8];
                 self.reader.read_exact(&mut value)?;
                 let value = i64::from_be_bytes(value);
                 Ok(Value { int_64: value })
-            },
+            }
             ValueKind::UInt8 => {
                 let mut value = [0u8; 1];
                 self.reader.read_exact(&mut value)?;
                 let value = value[0];
                 Ok(Value { uint_8: value })
-            },
+            }
             ValueKind::UInt16 => {
                 let mut value = [0u8; 2];
                 self.reader.read_exact(&mut value)?;
                 let value = u16::from_be_bytes(value);
                 Ok(Value { uint_16: value })
-            },
+            }
             ValueKind::UInt32 => {
                 let mut value = [0u8; 4];
                 self.reader.read_exact(&mut value)?;
                 let value = u32::from_be_bytes(value);
                 Ok(Value { uint_32: value })
-            },
+            }
             ValueKind::UInt64 => {
                 let mut value = [0u8; 8];
                 self.reader.read_exact(&mut value)?;
                 let value = u64::from_be_bytes(value);
                 Ok(Value { uint_64: value })
-            },
+            }
             ValueKind::Float32 => {
                 let mut value = [0u8; 4];
                 self.reader.read_exact(&mut value)?;
                 let value = f32::from_be_bytes(value);
                 Ok(Value { float_32: value })
-            },
+            }
             ValueKind::Float64 => {
                 let mut value = [0u8; 8];
                 self.reader.read_exact(&mut value)?;
@@ -129,17 +132,18 @@ impl<R: Read> PacketParser<R> {
 #[derive(Debug)]
 pub enum PacketError {
     InvalidId(u8),
-    InvalidValueCount {
-        actual: usize,
-        expected: usize
-    }
+    InvalidValueCount { actual: usize, expected: usize },
 }
 
 impl std::fmt::Display for PacketError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             PacketError::InvalidId(id) => write!(f, "Invalid packet id: {}", id),
-            PacketError::InvalidValueCount { actual, expected } => write!(f, "Invalid value count: expected {}, got {}", expected, actual)
+            PacketError::InvalidValueCount { actual, expected } => write!(
+                f,
+                "Invalid value count: expected {}, got {}",
+                expected, actual
+            ),
         }
     }
 }
@@ -170,9 +174,6 @@ impl<R: Read> Iterator for PacketParser<R> {
             values.push(value);
         }
 
-        Some(Ok(Packet {
-            id,
-            values
-        }))
+        Some(Ok(Packet { id, values }))
     }
 }

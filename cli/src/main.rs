@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::{BufWriter, Write};
-use std::path::{PathBuf, Path};
+use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand};
 use flight_data_reader::configuration::RocketConfig;
@@ -18,7 +18,7 @@ enum Action {
     Check {
         /// The location of the config file.
         #[clap(short, long)]
-        config: PathBuf
+        config: PathBuf,
     },
     Convert {
         #[clap(short, long, default_value = "csv")]
@@ -29,15 +29,15 @@ enum Action {
         /// The encoded file from the flight computer.
         data: PathBuf,
         /// The location to write the decoded data to.
-        output: PathBuf
-    }
+        output: PathBuf,
+    },
 }
 
 impl Action {
     pub fn config(&self) -> &Path {
         match self {
             Action::Check { config } => config,
-            Action::Convert { config, .. } => config
+            Action::Convert { config, .. } => config,
         }
     }
 }
@@ -55,7 +55,9 @@ fn main() {
 
     match args.action {
         Action::Check { .. } => check_config(config),
-        Action::Convert { to, data, output, .. } => convert_data(config, to, data, output)
+        Action::Convert {
+            to, data, output, ..
+        } => convert_data(config, to, data, output),
     }
 }
 

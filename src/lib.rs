@@ -1,3 +1,3 @@
 pub mod configuration;
-pub mod data;
 pub mod csv;
+pub mod data;

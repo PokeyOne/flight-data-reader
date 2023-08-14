@@ -1,4 +1,4 @@
-use serde::Deserializer;
+
 use serde_json::json;
 
 use super::*;
@@ -11,14 +11,14 @@ fn test_validate_with_conflicting_ids() {
             SensorConfig {
                 name: "sensor_a".to_string(),
                 id: 4,
-                values: vec![]
+                values: vec![],
             },
             SensorConfig {
                 name: "sensor_b".to_string(),
                 id: 4,
-                values: vec![]
-            }
-        ]
+                values: vec![],
+            },
+        ],
     };
 
     assert!(config.validate().is_err());
@@ -32,14 +32,14 @@ fn test_validate_normal() {
             SensorConfig {
                 name: "sensor_a".to_string(),
                 id: 4,
-                values: vec![]
+                values: vec![],
             },
             SensorConfig {
                 name: "sensor_b".to_string(),
                 id: 7,
-                values: vec![]
-            }
-        ]
+                values: vec![],
+            },
+        ],
     };
 
     assert!(config.validate().is_ok());
@@ -61,7 +61,8 @@ fn test_sensor_by_id() {
                 "values": []
             }
         ]
-    })).unwrap();
+    }))
+    .unwrap();
 
     assert_eq!(config.get_sensor_by_id(4).unwrap().name, "sensor_a");
     assert_eq!(config.get_sensor_by_id(7).unwrap().name, "sensor_b");
