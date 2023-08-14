@@ -1,0 +1,14 @@
+[package]
+name = "flight_data_reader_cli"
+version = "0.1.0"
+edition = "2021"
+authors = ["Mateo Carreras <mateo.carreras@gmail.com>"]
+
+[dependencies]
+flight_data_reader = { path = ".." }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dependencies.clap]
+version = "4.3.21"
+features = ["derive"]

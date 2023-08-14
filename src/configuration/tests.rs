@@ -75,6 +75,6 @@ fn test_load_from_json() {
     let config = serde_json::from_str::<RocketConfig>(file_content).unwrap();
 
     assert_eq!(config.name, "Xenia-2");
-    assert_eq!(config.sensors.len(), 2);
+    assert_eq!(config.sensors.len(), 3);
     assert_eq!(config.get_sensor_by_id(1).unwrap().name, "LSM");
 }
