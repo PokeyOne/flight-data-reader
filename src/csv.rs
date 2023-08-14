@@ -122,8 +122,8 @@ impl<I: SourceIterator> Iterator for CsvGenerator<I> {
 
 #[cfg(test)]
 mod tests {
-    use crate::data::Value;
     use crate::configuration::ValueKind;
+    use crate::data::Value;
 
     use super::*;
 

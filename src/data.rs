@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::Path;
@@ -7,6 +8,35 @@ use crate::configuration::{RocketConfig, ValueConfig, ValueKind};
 #[cfg(test)]
 mod tests;
 
+/// A safe wrapper around a value that knows its type.
+pub struct TypedValue {
+    pub value: Value,
+    pub value_kind: ValueKind,
+}
+
+impl TypedValue {
+    fn new(value: Value, value_kind: &ValueKind) -> Self {
+        Self {
+            value,
+            value_kind: *value_kind,
+        }
+    }
+
+    pub fn to_string(&self) -> String {
+        unsafe { self.value.to_string(&self.value_kind) }
+    }
+}
+
+impl Display for TypedValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.to_string())
+    }
+}
+
+/// A value that is recorded in a packet.
+///
+/// This value is a union and does not store the internal type. For user-facing
+/// implementations that need to know the type, see the `TypedValue` struct.
 pub union Value {
     pub int_8: i8,
     pub int_16: i16,
@@ -21,6 +51,34 @@ pub union Value {
 }
 
 impl Value {
+    /// Converts the value to a string using the format method.
+    ///
+    /// Integers are simply converted to a string using the format! macro with
+    /// no special formatting. Floats are formatted with 8 decimal places.
+    ///
+    /// # Arguments
+    ///
+    /// * `value_kind` - The kind of value to convert.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use flight_data_reader::data::Value;
+    /// use flight_data_reader::configuration::ValueKind;
+    ///
+    /// let value_a = Value { int_8: 42 };
+    /// let value_b = Value { float_32: 42.42 };
+    ///
+    /// assert_eq!(unsafe { value_a.to_string(&ValueKind::Int8) }, "42");
+    /// assert_eq!(unsafe { value_b.to_string(&ValueKind::Float32) }, "42.41999817");
+    /// ```
+    ///
+    /// # Safety
+    ///
+    /// This method is unsafe because it is possible to call it with the wrong
+    /// value kind. For example, if the value is an int_8, but the value kind
+    /// is a float_32, then the value will be interpreted as a float_32, which
+    /// will result in either undefined behavior or a panic.
     pub unsafe fn to_string(&self, value_kind: &ValueKind) -> String {
         match value_kind {
             ValueKind::Int8 => self.int_8.to_string(),
@@ -32,22 +90,40 @@ impl Value {
             ValueKind::UInt32 => self.uint_32.to_string(),
             ValueKind::UInt64 => self.uint_64.to_string(),
             ValueKind::Float32 => format!("{:.8}", self.float_32),
-            ValueKind::Float64 => self.float_64.to_string(),
+            ValueKind::Float64 => format!("{:.8}", self.float_64),
         }
     }
 }
 
+/// A single reading of a sensor.
+///
+/// Each packet consists of a single byte indicating the sensor ID that is in
+/// the config file, followed by the values for that sensor.
 pub struct Packet {
+    /// The ID of the sensor that is read.
     pub id: u8,
+    /// The values that are read from that sensor.
+    ///
+    /// The config is required to know the types of the values and how to
+    /// retrieve them.
     pub values: Vec<Value>,
 }
 
+/// A parser for reading packets from a stream.
+///
+/// This struct takes a reader that can be used as a byte stream of data, and
+/// presents an iterator interface that can be used to read packets
+/// individually.
 pub struct PacketParser<R: Read> {
+    /// The input reader.
     reader: BufReader<R>,
+    /// The configuration used to know how many values and what kind of values
+    /// to read.
     config: RocketConfig,
 }
 
 impl<R: Read> PacketParser<R> {
+    /// Create a new packet parser from a reader and a config.
     pub fn new(reader: R, config: RocketConfig) -> Self {
         Self {
             reader: BufReader::new(reader),
@@ -55,6 +131,14 @@ impl<R: Read> PacketParser<R> {
         }
     }
 
+    /// Create a new packet parser from a path and a config.
+    ///
+    /// The file is opened and a packet parser is created from the file.
+    ///
+    /// # Returns
+    ///
+    /// This method will return a result with either a packet parser or an IO
+    /// error if the file cannot be opened.
     pub fn from_path<P: AsRef<Path>>(
         path: P,
         config: RocketConfig,
@@ -129,9 +213,18 @@ impl<R: Read> PacketParser<R> {
     }
 }
 
+/// An error that occurs while parsing a packet.
 #[derive(Debug)]
 pub enum PacketError {
+    /// The parser tried to read an ID, but that ID was not in the config.
+    ///
+    /// The contained value is the ID that was read.
     InvalidId(u8),
+    /// Some how a parse value had the wrong number of values compared to the
+    /// config.
+    ///
+    /// This is likely only to happen if the packets are loaded with a different
+    /// config than the one used to later process the packets.
     InvalidValueCount { actual: usize, expected: usize },
 }
 
