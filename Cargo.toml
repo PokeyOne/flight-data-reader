@@ -4,6 +4,7 @@ members = [
     ".",
     "cli"
 ]
+exclude = ["web_package/rocket-data"]
 
 [workspace.dependencies]
 serde_json = "1.0.104"
