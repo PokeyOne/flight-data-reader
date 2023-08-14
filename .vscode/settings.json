@@ -1,0 +1,6 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "./web_package/rocket-data/Cargo.toml",
+        "./web_package/rocket-data/Cargo.toml"
+    ]
+}
