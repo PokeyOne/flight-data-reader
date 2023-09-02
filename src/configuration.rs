@@ -74,6 +74,24 @@ pub struct SensorConfig {
     pub values: Vec<ValueConfig>,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+pub enum Endianess {
+    Little,
+    Big
+}
+
+impl Endianess {
+    pub fn is_big(&self) -> bool {
+        matches!(self, Endianess::Big)
+    }
+}
+
+impl Default for Endianess {
+    fn default() -> Self {
+        Self::Big
+    }
+}
+
 /// Configuration for a single rocket.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RocketConfig {
@@ -81,6 +99,8 @@ pub struct RocketConfig {
     pub name: String,
     /// The sensors that are on the rocket
     pub sensors: Vec<SensorConfig>,
+    #[serde(default = "Endianess::default")]
+    pub endianess: Endianess
 }
 
 impl RocketConfig {

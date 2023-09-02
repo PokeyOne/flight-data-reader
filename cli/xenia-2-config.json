@@ -1,0 +1,114 @@
+{
+    "name": "Xenia2",
+    "endianess": "Little",
+    "sensors": [
+        {
+            "name": "BMP",
+            "id": 1,
+            "values": [
+                {
+                    "name": "Temperature",
+                    "data_type": "float_32"
+                },
+                {
+                    "name": "Pressure",
+                    "data_type": "float_32"
+                }
+            ]
+        },
+        {
+            "name": "MPU",
+            "id": 2,
+            "values": [
+                {
+                    "name": "AccelX",
+                    "data_type": "float_32"
+                },
+                {
+                    "name": "AccelY",
+                    "data_type": "float_32"
+                },
+                {
+                    "name": "AccelZ",
+                    "data_type": "float_32"
+                },
+                {
+                    "name": "GravX",
+                    "data_type": "float_32"
+                },
+                {
+                    "name": "GravY",
+                    "data_type": "float_32"
+                },
+                {
+                    "name": "GravZ",
+                    "data_type": "float_32"
+                }
+            ]
+        },
+        {
+            "name": "Timestamp",
+            "id": 3,
+            "values": [
+                {
+                    "name": "Timestamp",
+                    "data_type": "uint_32"
+                }
+            ]
+        },
+        {
+            "name": "StrainGauges",
+            "id": 4,
+            "values": [
+                {
+                    "name": "strain0",
+                    "data_type": "int_32"
+                },
+                {
+                    "name": "strain1",
+                    "data_type": "int_32"
+                },
+                {
+                    "name": "strain2",
+                    "data_type": "int_32"
+                },
+                {
+                    "name": "strain3",
+                    "data_type": "int_32"
+                },
+                {
+                    "name": "strain4",
+                    "data_type": "int_32"
+                },
+                {
+                    "name": "strain5",
+                    "data_type": "int_32"
+                },
+                {
+                    "name": "strain6",
+                    "data_type": "int_32"
+                },
+                {
+                    "name": "strain7",
+                    "data_type": "int_32"
+                },
+                {
+                    "name": "strain8",
+                    "data_type": "int_32"
+                },
+                {
+                    "name": "strain9",
+                    "data_type": "int_32"
+                },
+                {
+                    "name": "strain10",
+                    "data_type": "int_32"
+                },
+                {
+                    "name": "strain11",
+                    "data_type": "int_32"
+                }
+            ]
+        }
+    ]
+}

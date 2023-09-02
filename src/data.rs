@@ -122,6 +122,16 @@ pub struct PacketParser<R: Read> {
     config: RocketConfig,
 }
 
+macro_rules! from_le_or_be_bytes {
+    ($kind:ident, $value:expr, $endianess:expr) => {
+        if $endianess.is_big() {
+            $kind::from_be_bytes($value)
+        } else {
+            $kind::from_le_bytes($value)
+        }
+    }
+}
+
 impl<R: Read> PacketParser<R> {
     /// Create a new packet parser from a reader and a config.
     pub fn new(reader: R, config: RocketConfig) -> Self {
@@ -152,25 +162,25 @@ impl<R: Read> PacketParser<R> {
             ValueKind::Int8 => {
                 let mut value = [0u8; 1];
                 self.reader.read_exact(&mut value)?;
-                let value = i8::from_be_bytes(value);
+                let value = from_le_or_be_bytes!(i8, value, self.config.endianess);
                 Ok(Value { int_8: value })
             }
             ValueKind::Int16 => {
                 let mut value = [0u8; 2];
                 self.reader.read_exact(&mut value)?;
-                let value = i16::from_be_bytes(value);
+                let value = from_le_or_be_bytes!(i16, value, self.config.endianess);
                 Ok(Value { int_16: value })
             }
             ValueKind::Int32 => {
                 let mut value = [0u8; 4];
                 self.reader.read_exact(&mut value)?;
-                let value = i32::from_be_bytes(value);
+                let value = from_le_or_be_bytes!(i32, value, self.config.endianess);
                 Ok(Value { int_32: value })
             }
             ValueKind::Int64 => {
                 let mut value = [0u8; 8];
                 self.reader.read_exact(&mut value)?;
-                let value = i64::from_be_bytes(value);
+                let value = from_le_or_be_bytes!(i64, value, self.config.endianess);
                 Ok(Value { int_64: value })
             }
             ValueKind::UInt8 => {
@@ -182,31 +192,31 @@ impl<R: Read> PacketParser<R> {
             ValueKind::UInt16 => {
                 let mut value = [0u8; 2];
                 self.reader.read_exact(&mut value)?;
-                let value = u16::from_be_bytes(value);
+                let value = from_le_or_be_bytes!(u16, value, self.config.endianess);
                 Ok(Value { uint_16: value })
             }
             ValueKind::UInt32 => {
                 let mut value = [0u8; 4];
                 self.reader.read_exact(&mut value)?;
-                let value = u32::from_be_bytes(value);
+                let value = from_le_or_be_bytes!(u32, value, self.config.endianess);
                 Ok(Value { uint_32: value })
             }
             ValueKind::UInt64 => {
                 let mut value = [0u8; 8];
                 self.reader.read_exact(&mut value)?;
-                let value = u64::from_be_bytes(value);
+                let value = from_le_or_be_bytes!(u64, value, self.config.endianess);
                 Ok(Value { uint_64: value })
             }
             ValueKind::Float32 => {
                 let mut value = [0u8; 4];
                 self.reader.read_exact(&mut value)?;
-                let value = f32::from_be_bytes(value);
+                let value = from_le_or_be_bytes!(f32, value, self.config.endianess);
                 Ok(Value { float_32: value })
             }
             ValueKind::Float64 => {
                 let mut value = [0u8; 8];
                 self.reader.read_exact(&mut value)?;
-                let value = f64::from_be_bytes(value);
+                let value = from_le_or_be_bytes!(f64, value, self.config.endianess);
                 Ok(Value { float_64: value })
             }
         }
@@ -258,12 +268,14 @@ impl<R: Read> Iterator for PacketParser<R> {
         let Some(sensor_config) = self.config.get_sensor_by_id(id) else {
             return Some(Err(PacketError::InvalidId(id)));
         };
+        println!("Reading sensor {}", &sensor_config.name);
 
         let mut values: Vec<Value> = Vec::with_capacity(sensor_config.values.len());
 
         let value_configs = sensor_config.clone().values;
         for value_config in value_configs {
             let value = self.read_value(&value_config).unwrap();
+            println!("Read value: {} ({})", unsafe {value.to_string(&value_config.data_type)}, &value_config.name);
             values.push(value);
         }
 
