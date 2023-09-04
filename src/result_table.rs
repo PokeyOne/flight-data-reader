@@ -6,6 +6,9 @@ use crate::data::{Packet, PacketError, TypedValue};
 pub trait SourceIterator: Iterator<Item = Result<Packet, PacketError>> {}
 impl<I: Iterator<Item = Result<Packet, PacketError>>> SourceIterator for I {}
 
+#[cfg(test)]
+mod tests;
+
 /// Iterator that generates table rows from data provided.
 ///
 /// The resulting rows will always have the values in the same order and the
@@ -40,6 +43,15 @@ impl<I: SourceIterator> TableGenerator<I> {
             columns,
             packet_buf: vec![],
         }
+    }
+
+    /// Allow a custom subset of the columns to be generated.
+    ///
+    /// The resulting columns will be in the same order as the given columns,
+    /// **which may be different from the original order from the rocket
+    /// config**.
+    pub fn allow_columns(&mut self, columns: Vec<String>) {
+        self.columns = columns;
     }
 
     /// Get a column name for a given sensor and value configuration.

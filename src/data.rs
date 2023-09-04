@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::{Display, Debug};
 use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::Path;
@@ -54,6 +54,57 @@ impl Display for TypedValue {
         write!(f, "{}", unsafe { self.value.to_string(&self.value_kind) })
     }
 }
+
+impl Debug for TypedValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // The safety is assumed by the constructor.
+        write!(f, "{}", unsafe { self.value.to_string(&self.value_kind) })
+    }
+}
+
+impl From<i32> for TypedValue {
+    fn from(value: i32) -> Self {
+        Self {
+            value: Value { int_32: value },
+            value_kind: ValueKind::Int32,
+        }
+    }
+}
+
+impl From<f32> for TypedValue {
+    fn from(value: f32) -> Self {
+        Self {
+            value: Value { float_32: value },
+            value_kind: ValueKind::Float32,
+        }
+    }
+}
+
+impl PartialEq for TypedValue {
+    fn eq(&self, other: &Self) -> bool {
+        if self.value_kind != other.value_kind {
+            return false;
+        }
+
+        // The safety is assumed by the constructor.
+        unsafe {
+            match self.value_kind {
+                ValueKind::Int8 => self.value.int_8 == other.value.int_8,
+                ValueKind::Int16 => self.value.int_16 == other.value.int_16,
+                ValueKind::Int32 => self.value.int_32 == other.value.int_32,
+                ValueKind::Int64 => self.value.int_64 == other.value.int_64,
+                ValueKind::UInt8 => self.value.uint_8 == other.value.uint_8,
+                ValueKind::UInt16 => self.value.uint_16 == other.value.uint_16,
+                ValueKind::UInt32 => self.value.uint_32 == other.value.uint_32,
+                ValueKind::UInt64 => self.value.uint_64 == other.value.uint_64,
+                ValueKind::Float32 => self.value.float_32 == other.value.float_32,
+                ValueKind::Float64 => self.value.float_64 == other.value.float_64,
+            }
+        }
+    }
+}
+
+impl Eq for TypedValue {}
 
 /// A value that is recorded in a packet.
 ///
