@@ -74,19 +74,31 @@ pub struct SensorConfig {
     pub values: Vec<ValueConfig>,
 }
 
+/// The endianess of all values in the resulting binary file.
+///
+/// This allows easier implementation on various platforms where the endianness
+/// of the chip can be used instead of forcing the limited resources of the
+/// embedded device to do the conversion.
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub enum Endianess {
+    /// Multi byte values are reversed.
     Little,
+    /// Multi byte values are not reversed.
+    ///
+    /// This is the default value.
     Big,
 }
 
 impl Endianess {
+    /// Check if the endianess is big endian.
+    #[inline]
     pub fn is_big(&self) -> bool {
         matches!(self, Endianess::Big)
     }
 }
 
 impl Default for Endianess {
+    #[inline]
     fn default() -> Self {
         Self::Big
     }
@@ -102,6 +114,7 @@ pub struct RocketConfig {
     pub name: String,
     /// The sensors that are on the rocket
     pub sensors: Vec<SensorConfig>,
+    /// The endianess of all values in the data log binary file.
     #[serde(default = "Endianess::default")]
     pub endianess: Endianess,
     /// The display name of the rocket, if different from the name field.
@@ -117,6 +130,9 @@ pub struct RocketConfig {
 }
 
 impl RocketConfig {
+    /// Validate the configuration.
+    ///
+    /// Currently this checks that there are no duplicate sensor IDs.
     pub fn validate(&self) -> Result<(), String> {
         let mut ids: HashSet<u8> = HashSet::new();
 
@@ -131,15 +147,18 @@ impl RocketConfig {
         Ok(())
     }
 
+    /// Get the display name of the rocket from either the optional display name
+    /// field or the name field if the display name field is not set.
     pub fn display_name(&self) -> &String {
         match &self.display_name {
-            Some(value) => value,
-            _ => &self.name,
+            Some(name) => name,
+            None => &self.name,
         }
     }
 
+    /// Get the sensor configuration based on an ID, if it exists.
     pub fn get_sensor_by_id(&self, id: u8) -> Option<&SensorConfig> {
-        // TODO: A way to keep this sorted would be handy.
+        // TODO: A way to keep this sorted would be handy for performance.
         self.sensors.iter().find(|&sensor| sensor.id == id)
     }
 }

@@ -1,4 +1,5 @@
-use std::io::{BufWriter, Write};
+use std::error::Error;
+use std::io::Write;
 
 use std::fmt::Write as FmtWrite;
 
@@ -7,12 +8,23 @@ use crate::data::PacketError;
 
 use crate::result_table::{SourceIterator, TableGenerator};
 
+/// Iterator that generates CSV rows from data provided.
+///
+/// This uses the TableGenerator to generate the rows of a table and then
+/// converts them to CSV rows. This iterator will also return the table header
+/// as the first row. Each row will be a string containing the values separated
+/// by commas, or the header if it's the first row.
 pub struct CsvGenerator<I: SourceIterator> {
     is_first: bool,
     iter: TableGenerator<I>,
 }
 
 impl<I: SourceIterator> CsvGenerator<I> {
+    /// Create a new CSV generator given a Packet iterator and a rocket
+    /// configuration.
+    ///
+    /// This constructs the table generator so it can be used during the rest
+    /// of the lifetime of the CSV generator.
     pub fn new(iter: I, config: RocketConfig) -> Self {
         Self {
             iter: TableGenerator::new(iter, config),
@@ -20,8 +32,27 @@ impl<I: SourceIterator> CsvGenerator<I> {
         }
     }
 
-    pub fn write_csv<W: Write>(&mut self, _writer: BufWriter<W>) {
-        todo!()
+    /// Consume the iterator and write the CSV to the given writer.
+    ///
+    /// # Params
+    ///
+    /// * `writer` - Writer to write the CSV to.
+    ///
+    /// # Returns
+    ///
+    /// Result containing either nothing or an error.
+    ///
+    /// # Errors
+    ///
+    /// The two cases for error are either an IO error if the writer fails to
+    /// write or a packet error if the iterator fails to yield a packet.
+    pub fn write_csv<W: Write>(self, writer: &mut W) -> Result<(), Box<dyn Error>> {
+        for row in self {
+            let row = row?;
+            writeln!(writer, "{}", row)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -29,16 +60,19 @@ impl<I: SourceIterator> Iterator for CsvGenerator<I> {
     type Item = Result<String, PacketError>;
 
     fn next(&mut self) -> Option<Self::Item> {
+        // Create the header row if this is the first row.
         if self.is_first {
             self.is_first = false;
             return Some(Ok(self.iter.column_names().join(",")));
         }
 
+        // Get the next row from the table generator.
         let row = match self.iter.next()? {
             Ok(value) => value,
             Err(e) => return Some(Err(e)),
         };
 
+        // Don't return anything if the row is empty.
         if row.is_empty() {
             return None;
         }

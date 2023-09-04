@@ -11,12 +11,36 @@ mod tests;
 /// A safe wrapper around a value that knows its type.
 #[derive(Clone, Copy)]
 pub struct TypedValue {
-    pub value: Value,
-    pub value_kind: ValueKind,
+    /// The value union.
+    value: Value,
+    /// The kind of a value.
+    ///
+    /// This **must** match the value in the value union, or undefined behavior
+    /// will occur from the `to_string` method.
+    value_kind: ValueKind,
 }
 
 impl TypedValue {
-    pub fn new(value: Value, value_kind: &ValueKind) -> Self {
+    /// Create a new typed value.
+    ///
+    /// # Params
+    ///
+    /// * `value` - The value to wrap.
+    /// * `value_kind` - The kind of value to wrap.
+    ///
+    /// # Returns
+    ///
+    /// A new typed value.
+    ///
+    /// # Safety
+    ///
+    /// This method is unsafe because it is possible to call it with the wrong
+    /// value kind. For example, if the value is an int_8, but the value kind
+    /// is a float_32, then the value will be interpreted as a float_32, which
+    /// will result in either undefined behavior or a panic. After this value
+    /// is constructed, it is then considered safe to use because the
+    /// constructor of the value is assumed to take responsibility for safety.
+    pub unsafe fn new(value: Value, value_kind: &ValueKind) -> Self {
         Self {
             value,
             value_kind: *value_kind,
@@ -26,6 +50,7 @@ impl TypedValue {
 
 impl Display for TypedValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // The safety is assumed by the constructor.
         write!(f, "{}", unsafe { self.value.to_string(&self.value_kind) })
     }
 }
