@@ -7,6 +7,7 @@ pub mod csv;
 pub mod data;
 #[cfg(feature = "report")]
 pub mod report;
+pub mod result_table;
 
 pub fn load_config(path: &str) -> Result<RocketConfig, String> {
     let file = std::fs::File::open(path).map_err(|e| e.to_string())?;

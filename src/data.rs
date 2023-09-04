@@ -9,13 +9,14 @@ use crate::configuration::{RocketConfig, ValueConfig, ValueKind};
 mod tests;
 
 /// A safe wrapper around a value that knows its type.
+#[derive(Clone, Copy)]
 pub struct TypedValue {
     pub value: Value,
     pub value_kind: ValueKind,
 }
 
 impl TypedValue {
-    fn new(value: Value, value_kind: &ValueKind) -> Self {
+    pub fn new(value: Value, value_kind: &ValueKind) -> Self {
         Self {
             value,
             value_kind: *value_kind,
@@ -37,6 +38,7 @@ impl Display for TypedValue {
 ///
 /// This value is a union and does not store the internal type. For user-facing
 /// implementations that need to know the type, see the `TypedValue` struct.
+#[derive(Clone, Copy)]
 pub union Value {
     pub int_8: i8,
     pub int_16: i16,
