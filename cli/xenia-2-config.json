@@ -1,5 +1,7 @@
 {
     "name": "Xenia2",
+    "display_name": "Xenia 2",
+    "description": "Xenia 2 is a 10k ft sounding rocket launched at Launch Canada 2023 in Timmins Ontario by the University of Victoria Rocketry Team.",
     "endianess": "Little",
     "sensors": [
         {

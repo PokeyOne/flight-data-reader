@@ -6,6 +6,9 @@ use super::*;
 fn test_validate_with_conflicting_ids() {
     let config = RocketConfig {
         name: "test".to_string(),
+        endianess: Endianess::default(),
+        display_name: None,
+        description: None,
         sensors: vec![
             SensorConfig {
                 name: "sensor_a".to_string(),
@@ -27,6 +30,9 @@ fn test_validate_with_conflicting_ids() {
 fn test_validate_normal() {
     let config = RocketConfig {
         name: "test".to_string(),
+        endianess: Endianess::default(),
+        display_name: None,
+        description: None,
         sensors: vec![
             SensorConfig {
                 name: "sensor_a".to_string(),

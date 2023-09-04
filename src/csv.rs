@@ -131,6 +131,9 @@ mod tests {
     fn test_csv_generator() {
         let config = RocketConfig {
             name: "test".to_string(),
+            endianess: crate::configuration::Endianess::default(),
+            display_name: None,
+            description: None,
             sensors: vec![SensorConfig {
                 id: 0,
                 name: "test".to_string(),

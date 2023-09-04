@@ -95,12 +95,25 @@ impl Default for Endianess {
 /// Configuration for a single rocket.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RocketConfig {
-    /// The name of the rocket that is launching
+    /// The name of the rocket that is launching.
+    ///
+    /// This should be a standard value that doesn't have any spaces and could
+    /// be used as a unique identifier.
     pub name: String,
     /// The sensors that are on the rocket
     pub sensors: Vec<SensorConfig>,
     #[serde(default = "Endianess::default")]
-    pub endianess: Endianess
+    pub endianess: Endianess,
+    /// The display name of the rocket, if different from the name field.
+    ///
+    /// This field is only used for report generating purposes.
+    pub display_name: Option<String>,
+    /// A description of the rocket.
+    ///
+    /// This should start with a complete sentence so that it can be placed in
+    /// a sentence in the generated report and fit in. For example starting with
+    /// "The rocket is..." or "Xenia-2 is...", or something to that effect.
+    pub description: Option<String>
 }
 
 impl RocketConfig {
@@ -116,6 +129,13 @@ impl RocketConfig {
         }
 
         Ok(())
+    }
+
+    pub fn display_name(&self) -> &String {
+        match &self.display_name {
+            Some(value) => value,
+            _ => &self.name
+        }
     }
 
     pub fn get_sensor_by_id(&self, id: u8) -> Option<&SensorConfig> {
