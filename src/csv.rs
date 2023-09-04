@@ -1,23 +1,22 @@
-use std::collections::HashMap;
 use std::io::{BufWriter, Write};
 
 use std::fmt::Write as FmtWrite;
 
-use crate::configuration::{RocketConfig, SensorConfig, ValueConfig};
-use crate::data::{Packet, PacketError};
+use crate::configuration::RocketConfig;
+use crate::data::PacketError;
 
 use crate::result_table::{SourceIterator, TableGenerator};
 
 pub struct CsvGenerator<I: SourceIterator> {
     is_first: bool,
-    iter: TableGenerator<I>
+    iter: TableGenerator<I>,
 }
 
 impl<I: SourceIterator> CsvGenerator<I> {
     pub fn new(iter: I, config: RocketConfig) -> Self {
         Self {
             iter: TableGenerator::new(iter, config),
-            is_first: true
+            is_first: true,
         }
     }
 
@@ -37,7 +36,7 @@ impl<I: SourceIterator> Iterator for CsvGenerator<I> {
 
         let row = match self.iter.next()? {
             Ok(value) => value,
-            Err(e) => return Some(Err(e))
+            Err(e) => return Some(Err(e)),
         };
 
         if row.is_empty() {
@@ -60,8 +59,8 @@ impl<I: SourceIterator> Iterator for CsvGenerator<I> {
 
 #[cfg(test)]
 mod tests {
-    use crate::configuration::ValueKind;
-    use crate::data::Value;
+    use crate::configuration::{ValueKind, SensorConfig, ValueConfig};
+    use crate::data::{Value, Packet};
 
     use super::*;
 

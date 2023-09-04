@@ -5,14 +5,14 @@ use std::str::FromStr;
 pub enum LatexElement {
     Environment {
         name: String,
-        elements: Vec<LatexElement>
+        elements: Vec<LatexElement>,
     },
     Directive {
         name: String,
         opts: Vec<String>,
-        args: Vec<String>
+        args: Vec<String>,
     },
-    Raw(String)
+    Raw(String),
 }
 
 impl FromStr for LatexElement {
@@ -25,7 +25,8 @@ impl FromStr for LatexElement {
 
 impl LatexElement {
     pub fn write<W>(&self, writer: &mut W) -> std::io::Result<()>
-        where W: Write
+    where
+        W: Write,
     {
         match self {
             Self::Directive { name, opts, args } => {
@@ -37,14 +38,14 @@ impl LatexElement {
                     write!(writer, "{{{arg}}}")?;
                 }
                 write!(writer, " ")
-            },
+            }
             Self::Environment { name, elements } => {
                 write!(writer, "\\begin{{{name}}} ")?;
                 for element in elements {
                     element.write(writer)?;
                 }
                 write!(writer, "\\end{{{name}}} ")
-            },
+            }
             Self::Raw(value) => {
                 write!(writer, " {value} ")
             }
@@ -53,7 +54,8 @@ impl LatexElement {
 
     #[inline]
     pub fn directive<S>(name: S, opts: Vec<String>, args: Vec<String>) -> Self
-        where S: ToString
+    where
+        S: ToString,
     {
         let name = name.to_string();
         LatexElement::Directive { name, opts, args }
@@ -68,14 +70,14 @@ impl LatexElement {
     pub fn environment<S: ToString>(name: S, contents: Vec<LatexElement>) -> Self {
         Self::Environment {
             name: name.to_string(),
-            elements: contents
+            elements: contents,
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::io::BufWriter;
+    
 
     use super::*;
 
@@ -114,7 +116,11 @@ mod tests {
     fn test_latex_args_and_opts_directive_writing() {
         let mut result: Vec<u8> = vec![];
 
-        let directive = LatexElement::directive("test", vec!["banana".to_string(), "pair".to_string()], vec!["apple".to_string(), "cucumber".to_string()]);
+        let directive = LatexElement::directive(
+            "test",
+            vec!["banana".to_string(), "pair".to_string()],
+            vec!["apple".to_string(), "cucumber".to_string()],
+        );
 
         directive.write(&mut result).unwrap();
 

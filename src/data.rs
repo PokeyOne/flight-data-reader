@@ -22,15 +22,11 @@ impl TypedValue {
             value_kind: *value_kind,
         }
     }
-
-    pub fn to_string(&self) -> String {
-        unsafe { self.value.to_string(&self.value_kind) }
-    }
 }
 
 impl Display for TypedValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.to_string())
+        write!(f, "{}", unsafe { self.value.to_string(&self.value_kind) })
     }
 }
 
@@ -131,7 +127,7 @@ macro_rules! from_le_or_be_bytes {
         } else {
             $kind::from_le_bytes($value)
         }
-    }
+    };
 }
 
 impl<R: Read> PacketParser<R> {
@@ -277,7 +273,11 @@ impl<R: Read> Iterator for PacketParser<R> {
         let value_configs = sensor_config.clone().values;
         for value_config in value_configs {
             let value = self.read_value(&value_config).unwrap();
-            println!("Read value: {} ({})", unsafe {value.to_string(&value_config.data_type)}, &value_config.name);
+            println!(
+                "Read value: {} ({})",
+                unsafe { value.to_string(&value_config.data_type) },
+                &value_config.name
+            );
             values.push(value);
         }
 

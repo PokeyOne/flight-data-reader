@@ -10,7 +10,7 @@ pub struct TableGenerator<I: SourceIterator> {
     iter: I,
     config: RocketConfig,
     packet_buf: Vec<Packet>,
-    columns: Vec<String>
+    columns: Vec<String>,
 }
 
 impl<I: SourceIterator> TableGenerator<I> {
@@ -21,7 +21,7 @@ impl<I: SourceIterator> TableGenerator<I> {
             iter,
             config,
             columns,
-            packet_buf: vec![]
+            packet_buf: vec![],
         }
     }
 
@@ -109,4 +109,3 @@ impl<I: SourceIterator> Iterator for TableGenerator<I> {
         Some(Ok(result))
     }
 }
-

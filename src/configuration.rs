@@ -77,7 +77,7 @@ pub struct SensorConfig {
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub enum Endianess {
     Little,
-    Big
+    Big,
 }
 
 impl Endianess {
@@ -113,7 +113,7 @@ pub struct RocketConfig {
     /// This should start with a complete sentence so that it can be placed in
     /// a sentence in the generated report and fit in. For example starting with
     /// "The rocket is..." or "Xenia-2 is...", or something to that effect.
-    pub description: Option<String>
+    pub description: Option<String>,
 }
 
 impl RocketConfig {
@@ -134,7 +134,7 @@ impl RocketConfig {
     pub fn display_name(&self) -> &String {
         match &self.display_name {
             Some(value) => value,
-            _ => &self.name
+            _ => &self.name,
         }
     }
 
