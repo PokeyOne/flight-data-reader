@@ -1,5 +1,7 @@
 # Flight Data Reader
 
+![MIT License Badge](https://img.shields.io/badge/license-MIT-blue)
+
 A reader for binary data in a custom binary format created for UVic Rocketry.
 This repo contains three main components:
 * **Rust library**: The actual implementation of conversion
