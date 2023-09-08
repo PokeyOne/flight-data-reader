@@ -13,6 +13,8 @@ pub enum LatexElement {
         args: Vec<String>,
     },
     Raw(String),
+    Section(String),
+    Subsection(String),
 }
 
 impl FromStr for LatexElement {
@@ -48,7 +50,13 @@ impl LatexElement {
             }
             Self::Raw(value) => {
                 write!(writer, " {value} ")
-            }
+            },
+            Self::Section(value) => {
+                write!(writer, "\\section{{{value}}} ")
+            },
+            Self::Subsection(value) => {
+                write!(writer, "\\subsection{{{value}}} ")
+            },
         }
     }
 
@@ -77,7 +85,7 @@ impl LatexElement {
 
 #[cfg(test)]
 mod tests {
-    
+
 
     use super::*;
 

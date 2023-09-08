@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::fmt::{Display, Debug};
 use std::fs::File;
 use std::io::{BufReader, Read};
@@ -80,26 +81,84 @@ impl From<f32> for TypedValue {
     }
 }
 
-impl PartialEq for TypedValue {
-    fn eq(&self, other: &Self) -> bool {
+impl PartialOrd for TypedValue {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         if self.value_kind != other.value_kind {
-            return false;
+            return None;
         }
 
         // The safety is assumed by the constructor.
         unsafe {
             match self.value_kind {
-                ValueKind::Int8 => self.value.int_8 == other.value.int_8,
-                ValueKind::Int16 => self.value.int_16 == other.value.int_16,
-                ValueKind::Int32 => self.value.int_32 == other.value.int_32,
-                ValueKind::Int64 => self.value.int_64 == other.value.int_64,
-                ValueKind::UInt8 => self.value.uint_8 == other.value.uint_8,
-                ValueKind::UInt16 => self.value.uint_16 == other.value.uint_16,
-                ValueKind::UInt32 => self.value.uint_32 == other.value.uint_32,
-                ValueKind::UInt64 => self.value.uint_64 == other.value.uint_64,
-                ValueKind::Float32 => self.value.float_32 == other.value.float_32,
-                ValueKind::Float64 => self.value.float_64 == other.value.float_64,
+                ValueKind::Int8 => self.value.int_8.partial_cmp(&other.value.int_8),
+                ValueKind::Int16 => self.value.int_16.partial_cmp(&other.value.int_16),
+                ValueKind::Int32 => self.value.int_32.partial_cmp(&other.value.int_32),
+                ValueKind::Int64 => self.value.int_64.partial_cmp(&other.value.int_64),
+                ValueKind::UInt8 => self.value.uint_8.partial_cmp(&other.value.uint_8),
+                ValueKind::UInt16 => self.value.uint_16.partial_cmp(&other.value.uint_16),
+                ValueKind::UInt32 => self.value.uint_32.partial_cmp(&other.value.uint_32),
+                ValueKind::UInt64 => self.value.uint_64.partial_cmp(&other.value.uint_64),
+                ValueKind::Float32 => self.value.float_32.partial_cmp(&other.value.float_32),
+                ValueKind::Float64 => self.value.float_64.partial_cmp(&other.value.float_64),
             }
+        }
+    }
+}
+
+impl TypedValue {
+    pub fn partial_min(&self, other: &Self) -> Option<Self> {
+        match self.partial_cmp(other) {
+            Some(ordering) => match ordering {
+                Ordering::Less | Ordering::Equal => Some(*self),
+                Ordering::Greater => Some(*other),
+            },
+            _ => None,
+        }
+    }
+
+    pub fn partial_max(&self, other: &Self) -> Option<Self> {
+        match self.partial_cmp(other) {
+            Some(ordering) => match ordering {
+                Ordering::Greater | Ordering::Equal => Some(*self),
+                Ordering::Less => Some(*other),
+            },
+            _ => None,
+        }
+    }
+
+    pub fn accumulate(&mut self, other: &Self) -> Result<(), String> {
+        if self.value_kind != other.value_kind {
+            return Err(format!(
+                "Cannot accumulate values of different types: {:?} and {:?}",
+                self.value_kind, other.value_kind
+            ));
+        }
+
+        // The safety is assumed by the constructor.
+        unsafe {
+            match self.value_kind {
+                ValueKind::Int8 => self.value.int_8 += other.value.int_8,
+                ValueKind::Int16 => self.value.int_16 += other.value.int_16,
+                ValueKind::Int32 => self.value.int_32 += other.value.int_32,
+                ValueKind::Int64 => self.value.int_64 += other.value.int_64,
+                ValueKind::UInt8 => self.value.uint_8 += other.value.uint_8,
+                ValueKind::UInt16 => self.value.uint_16 += other.value.uint_16,
+                ValueKind::UInt32 => self.value.uint_32 += other.value.uint_32,
+                ValueKind::UInt64 => self.value.uint_64 += other.value.uint_64,
+                ValueKind::Float32 => self.value.float_32 += other.value.float_32,
+                ValueKind::Float64 => self.value.float_64 += other.value.float_64,
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl PartialEq for TypedValue {
+    fn eq(&self, other: &Self) -> bool {
+        match self.partial_cmp(other) {
+            Some(std::cmp::Ordering::Equal) => true,
+            _ => false,
         }
     }
 }

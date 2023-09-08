@@ -6,6 +6,8 @@ use clap::{Parser, Subcommand};
 use flight_data_reader::configuration::RocketConfig;
 use flight_data_reader::csv::CsvGenerator;
 use flight_data_reader::data::PacketParser;
+use flight_data_reader::report::Report;
+use flight_data_reader::result_table::TableGenerator;
 
 #[derive(Parser)]
 struct Cli {
@@ -31,6 +33,15 @@ enum Action {
         /// The location to write the decoded data to.
         output: PathBuf,
     },
+    Report {
+        /// The location of the config file.
+        #[clap(short, long)]
+        config: PathBuf,
+        /// The encoded file from the flight computer.
+        data: PathBuf,
+        /// The location to write latex report to.
+        output: PathBuf,
+    },
 }
 
 impl Action {
@@ -38,6 +49,7 @@ impl Action {
         match self {
             Action::Check { config } => config,
             Action::Convert { config, .. } => config,
+            Action::Report { config, .. } => config,
         }
     }
 }
@@ -58,6 +70,7 @@ fn main() {
         Action::Convert {
             to, data, output, ..
         } => convert_data(config, to, data, output),
+        Action::Report { data, output, .. } => generate_report(config, data, output),
     }
 }
 
@@ -105,6 +118,17 @@ fn check_config(config: RocketConfig) {
         println!("    ]");
         println!("  ]");
     }
+}
+
+fn generate_report(config: RocketConfig, data: PathBuf, output: PathBuf) {
+    let input_reader = File::open(data).unwrap();
+    let packet_parser = PacketParser::new(input_reader, config.clone());
+
+    let mut output_writer = BufWriter::new(File::create(output).unwrap());
+
+    let report = Report::new(config, packet_parser);
+
+    report.write(&mut output_writer).unwrap();
 }
 
 fn load_config<P: AsRef<Path>>(path: P) -> Result<RocketConfig, Box<dyn std::error::Error>> {
