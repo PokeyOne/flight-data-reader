@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{Write, Read};
+use std::io::{Read, Write};
 
 use crate::configuration::RocketConfig;
-use crate::data::{TypedValue, PacketParser};
+use crate::data::{PacketParser, TypedValue};
 use crate::report::latex::LatexElement;
 use crate::result_table::TableGenerator;
 
@@ -29,13 +29,13 @@ pub struct ValueStats {
 
 /// Reported data about a sensor.
 pub struct SensorReport {
-    value_stats: HashMap<String, ValueStats>
+    value_stats: HashMap<String, ValueStats>,
 }
 
 // TODO: Calculation reports with a function based on variable names.
 pub struct Report {
     config: RocketConfig,
-    sensor_reports: HashMap<u8, SensorReport>
+    sensor_reports: HashMap<u8, SensorReport>,
 }
 
 impl Report {
@@ -55,11 +55,13 @@ impl Report {
                     continue;
                 };
 
-                let stats = column_stats.entry(column_name.clone()).or_insert_with(|| ValueStats {
-                    min: value.clone(),
-                    max: value.clone(),
-                    count: 0,
-                });
+                let stats = column_stats
+                    .entry(column_name.clone())
+                    .or_insert_with(|| ValueStats {
+                        min: value.clone(),
+                        max: value.clone(),
+                        count: 0,
+                    });
 
                 // If any of these fails, it means that the data is invalid.
                 stats.min = stats.min.partial_min(value).unwrap();
@@ -82,7 +84,10 @@ impl Report {
             sensor_reports.insert(sensor.id, SensorReport { value_stats });
         }
 
-        Report { config, sensor_reports }
+        Report {
+            config,
+            sensor_reports,
+        }
     }
 
     pub fn write<W: Write>(&self, writer: &mut W) -> std::io::Result<()> {
@@ -95,8 +100,18 @@ impl Report {
 
         for sensor in self.config.sensors.iter() {
             elements.push(LatexElement::Subsection(sensor.name.clone()));
-            let value_list = sensor.values.iter().map(|v| v.name.as_str()).collect::<Vec<&str>>().join(", ");
-            elements.push(LatexElement::raw(format!("The {} sensor has {} values: {}. ", sensor.name, sensor.values.len(), value_list)));
+            let value_list = sensor
+                .values
+                .iter()
+                .map(|v| v.name.as_str())
+                .collect::<Vec<&str>>()
+                .join(", ");
+            elements.push(LatexElement::raw(format!(
+                "The {} sensor has {} values: {}. ",
+                sensor.name,
+                sensor.values.len(),
+                value_list
+            )));
 
             let Some(sensor_report) = self.sensor_reports.get(&sensor.id) else {
                 elements.push(LatexElement::raw("No data was recorded for this sensor. "));
@@ -104,9 +119,18 @@ impl Report {
             };
 
             for (name, stats) in sensor_report.value_stats.iter() {
-                elements.push(LatexElement::raw(format!("The {} value has {} samples. ", name, stats.count)));
-                elements.push(LatexElement::raw(format!("The minimum value is {}. ", stats.min)));
-                elements.push(LatexElement::raw(format!("The maximum value is {}. ", stats.max)));
+                elements.push(LatexElement::raw(format!(
+                    "The {} value has {} samples. ",
+                    name, stats.count
+                )));
+                elements.push(LatexElement::raw(format!(
+                    "The minimum value is {}. ",
+                    stats.min
+                )));
+                elements.push(LatexElement::raw(format!(
+                    "The maximum value is {}. ",
+                    stats.max
+                )));
             }
         }
 

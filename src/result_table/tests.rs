@@ -48,9 +48,18 @@ fn test_basic_column_generation() {
     let mut table = TableGenerator::new(test_packets().into_iter().map(Ok), test_config().clone());
 
     assert_eq!(table.column_names(), vec!["test_value", "test_value2"]);
-    assert_eq!(table.next().unwrap().unwrap(), vec![Some(1.0_f32.into()), Some(1_i32.into())]);
-    assert_eq!(table.next().unwrap().unwrap(), vec![Some(2.0_f32.into()), Some(2_i32.into())]);
-    assert_eq!(table.next().unwrap().unwrap(), vec![Some(3.0_f32.into()), Some(3_i32.into())]);
+    assert_eq!(
+        table.next().unwrap().unwrap(),
+        vec![Some(1.0_f32.into()), Some(1_i32.into())]
+    );
+    assert_eq!(
+        table.next().unwrap().unwrap(),
+        vec![Some(2.0_f32.into()), Some(2_i32.into())]
+    );
+    assert_eq!(
+        table.next().unwrap().unwrap(),
+        vec![Some(3.0_f32.into()), Some(3_i32.into())]
+    );
     assert_eq!(table.next().is_none(), true);
 }
 

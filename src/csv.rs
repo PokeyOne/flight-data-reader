@@ -93,8 +93,8 @@ impl<I: SourceIterator> Iterator for CsvGenerator<I> {
 
 #[cfg(test)]
 mod tests {
-    use crate::configuration::{ValueKind, SensorConfig, ValueConfig};
-    use crate::data::{Value, Packet};
+    use crate::configuration::{SensorConfig, ValueConfig, ValueKind};
+    use crate::data::{Packet, Value};
 
     use super::*;
 

@@ -50,13 +50,13 @@ impl LatexElement {
             }
             Self::Raw(value) => {
                 write!(writer, " {value} ")
-            },
+            }
             Self::Section(value) => {
                 write!(writer, "\\section{{{value}}} ")
-            },
+            }
             Self::Subsection(value) => {
                 write!(writer, "\\subsection{{{value}}} ")
-            },
+            }
         }
     }
 
@@ -85,7 +85,6 @@ impl LatexElement {
 
 #[cfg(test)]
 mod tests {
-
 
     use super::*;
 
