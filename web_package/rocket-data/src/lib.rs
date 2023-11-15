@@ -1,12 +1,10 @@
 mod utils;
 
-use std::io::BufReader;
-use std::io::Write;
-
 use flight_data_reader::configuration::RocketConfig;
 use flight_data_reader::csv::CsvGenerator;
 use flight_data_reader::data::PacketParser;
 use wasm_bindgen::prelude::*;
+
 
 #[wasm_bindgen]
 extern "C" {
@@ -18,39 +16,50 @@ pub fn greet() {
     alert("Hello, rocket-data!");
 }
 
-/// Given the location of a json config file and the binary data file, this
-/// method will load the config file and parse the binary data file into
-/// memory. The data will then be converted into CSV and written to a csv file.
+/// Given a config file and a binary data file, this method will
+/// load the config file and parse the binary data file into memory.
+/// The data will then be converted into CSV and returned as a String.
 ///
 /// # Arguments
 ///
-/// * `config_file_location` - The location of the json config file.
-/// * `data_file_location` - The location of the binary data file.
-/// * `csv_file_location` - The location of the csv file to write to.
+/// * `config_file` - The json config file JavaScript File object.
+/// * `data_file_location` - The binary data file Javascript File object.
 ///
 /// # Errors
 ///
-/// This method will return an error if the config file cannot be loaded, the
-/// data file cannot be opened, or the csv file cannot be written to.
+/// This method will return an error if the config file cannot be loaded,
+/// or the data file cannot be loaded.
 ///
 /// # Returns
 ///
-/// This method will return `Ok(())` if the csv file was successfully written
-/// to, or an error if anything IO or parsing related went wrong.
+/// This method will return the stringified CSV file or
+/// an error if file loading or parsing related went wrong.
+
 #[wasm_bindgen]
-pub fn convert_to_csv(config_file_location: &str, data_file_location: &str, csv_file_location: &str) -> Result<(), String> {
-    let config: RocketConfig = flight_data_reader::load_config(config_file_location)?;
-
-    let file = std::fs::File::open(data_file_location).map_err(|e| e.to_string())?;
-    let file = BufReader::new(file);
-
-    let packet_parser = PacketParser::new(file, config.clone());
+pub async fn convert_to_csv(config_file: web_sys::File, data_file: web_sys::File) -> Result<String, String> {
+    let config = wasm_bindgen_futures::JsFuture::from(config_file.text())
+        .await
+        .ok()
+        .expect("Could not get rocket config data")
+        .as_string()
+        .unwrap();
+    let data = wasm_bindgen_futures::JsFuture::from(data_file.text())
+        .await
+        .ok()
+        .expect("Could not get binary data")
+        .as_string()
+        .unwrap();
+    let data = data.as_bytes();
+    
+    let config: RocketConfig = flight_data_reader::load_config_str(&config)?;
+    let packet_parser = PacketParser::new(data, config.clone());
     let mut csv_generator = CsvGenerator::new(packet_parser, config.clone());
 
-    let mut output_csv_file = std::fs::File::create(csv_file_location).map_err(|e| e.to_string())?;
+    let mut csv_str = String::new();
     while let Some(Ok(line)) = csv_generator.next() {
-        output_csv_file.write_all(line.as_bytes()).map_err(|e| e.to_string())?;
+	    csv_str.push_str(&line);
+	    csv_str.push('\n');
     }
 
-    Ok(())
+    Ok(csv_str)
 }

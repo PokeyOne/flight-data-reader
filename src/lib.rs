@@ -15,3 +15,7 @@ pub fn load_config(path: &str) -> Result<RocketConfig, String> {
 
     serde_json::from_reader(file_reader).map_err(|e| e.to_string())
 }
+
+pub fn load_config_str(config: &str) -> Result<RocketConfig, String> {
+    serde_json::from_str(config).map_err(|e| e.to_string())
+}
